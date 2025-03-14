@@ -1,0 +1,16 @@
+nodes:
+  - id: terminal-input
+    build: pip install -e ./agents/terminal-input
+    path: dynamic
+    outputs:
+      - data
+    inputs:
+      task: llm-test/llm_output
+  - id: llm-test
+    operator: 
+      python: ./scripts/llm_test.py
+      outputs:
+        - llm_output
+      inputs:
+        task: terminal-input/data
+ 
