@@ -96,7 +96,8 @@ def main():
         "解释监督学习和无监督学习之间的区别。",
         "查找关于使用TensorFlow构建神经网络的教程。",
         "区块链技术在加密货币之外的应用有哪些？",
-        "请告诉我互联网的历史。"
+        "请告诉我互联网的历史。",
+        "查找kitti数据集"
     ]
     for i in test_search_words:
         query = classify_text(i)

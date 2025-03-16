@@ -8,11 +8,11 @@ def get_search_engines_json(prompt):
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://api.siliconflow.cn/v1")
     try:
         response = client.chat.completions.create(
-            model="deepseek-ai/DeepSeek-V2.5",
+            model="deepseek-ai/DeepSeek-R1",
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a friendly assistant here to help you with your search engine classification."
+                    "content": "You are a friendly assistant here to help you with your search engine classification.你必须给出大部分基于中国用户的相关信息，采用可靠的较为官方的网站链接。"
                 },
                 {
                     "role": "user",

@@ -35,7 +35,7 @@ def get_links_by_category(collection, category):
 
 def main():
     # 加载 .env 文件中的环境变量
-    load_dotenv("/Users/keria/Documents/mofa/DigIt/.env")
+    load_dotenv()
     
     # 从环境变量获取MongoDB连接参数
     mongo_uri = os.getenv("MONGO_URI")
