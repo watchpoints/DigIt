@@ -5,12 +5,12 @@ nodes:
     outputs:
       - data
     inputs:
-      task: llm-test/llm_output
-  - id: llm-test
+      task: get-search-link/search_link_output
+  - id: get-search-link
     operator: 
-      python: ./scripts/llm_test.py
+      python: ./scripts/get_search_link.py
       outputs:
-        - llm_output
+        - search_link_output
       inputs:
         task: terminal-input/data
  
