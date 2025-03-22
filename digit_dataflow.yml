@@ -5,12 +5,15 @@ nodes:
     outputs:
       - data
     inputs:
-      task: get-search-link/search_link_output
-  - id: get-search-link
-    operator: 
-      python: ./scripts/get_search_link.py
-      outputs:
-        - search_link_output
-      inputs:
-        task: terminal-input/data
+      task: mcp_llm/mcp_llm_output
+  - id: mcp_llm
+    build: pip install -e ./agents/mcp_llm
+    path: mcp_llm
+    outputs:
+      - mcp_llm_output
+    inputs:
+      task: terminal-input/data
+    env:
+      IS_DATAFLOW_END: false
+      WRITE_LOG: true
  

@@ -1,1 +1,3 @@
 pymongo[srv]
+colorama
+mcp==1.1.1
