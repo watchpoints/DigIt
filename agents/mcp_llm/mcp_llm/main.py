@@ -10,7 +10,7 @@ from dora import Node
 import json
 import pyarrow as pa
 import asyncio_atexit
-
+from mcp_llm.llm.llm import OpenAIClient
 
 config = Configuration()
 server_config_path = get_relative_path(__file__, sibling_directory_name='mcp_llm/configs', target_file_name='servers_config.json')
@@ -22,7 +22,8 @@ servers = [
 ]
 yaml_path = get_relative_path(__file__, sibling_directory_name='mcp_llm/configs', target_file_name='chat_session.yml')
 inputs = load_agent_config(yaml_path)
-chat_session = ChatSession(servers=servers, inputs=inputs)
+openai = OpenAIClient(inputs)
+chat_session = ChatSession(servers, openai)
 
 async def run_agent(task):
     try:

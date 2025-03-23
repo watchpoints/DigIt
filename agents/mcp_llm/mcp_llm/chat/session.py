@@ -4,8 +4,9 @@ import colorama
 
 
 from mcp_llm.mcp_server.server import Server
-from mofa.run.run_agent import run_dspy_or_crewai_agent
+from mcp_llm.llm.llm import OpenAIClient
 import asyncio
+import json
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -14,23 +15,25 @@ logging.basicConfig(
 SYSTEM_MESSAGE = (
     """
 You are an efficient and reliable assistant with access to the following tools:
+
 {}
 
 Based on the user's query, select the appropriate tool. If no tool is needed, reply directly.
 
 IMPORTANT: When you need to use a tool, reply ONLY with a JSON object in the exact format below (without any extra text):
+IMPORTANT: 工具名字不能重复，尽可能多用工具
 !!你还可以生成多个可用工具的json，就像下面这样,尽可能的使用多种工具生成相应回答
-{{
-    "tool": "tool-name",
+[
+    "tool": "tool-1-name",
     "arguments": {{
-        "argument-name": value
+        "argument-name": "value you prefer"
     }},
-    "tool": "tool-name",
+    "tool": "tool-2-name",
     "arguments": {{
-        "argument-name": value
+        "argument-name": "value you prefer"
     }},
     ...
-}},
+]
 
 
 After receiving a tool's response, process the information by:
@@ -46,11 +49,11 @@ Use only the tools defined above.
 class ChatSession:
     """Orchestrates the interaction between user, LLM, and tools."""
 
-    def __init__(self, servers: list[Server], inputs) -> None:
+    def __init__(self, servers: list[Server], llm_client: OpenAIClient):
         self.servers: list[Server] = servers
-        self.inputs = inputs
+        # self.inputs = inputs
+        self.llm_client = llm_client
         self.messages = []
-        self.result = ""
 
     async def cleanup_servers(self) -> None:
         """Clean up all servers properly."""
@@ -72,15 +75,12 @@ class ChatSession:
         Returns:
             The result of tool execution or the original response.
         """
-        import json
+
 
         try:
-            tool_call = json.loads(llm_response)
+            tool_calls = json.loads(llm_response)
             results = {}
-            if "tool" in tool_call and "arguments" in tool_call:
-                logging.debug(f"Executing tool: {tool_call['tool']}")
-                logging.debug(f"With arguments: {tool_call['arguments']}")
-
+            for tool_call in tool_calls:  # tool_calls 是一个 JSON 数组
                 for server in self.servers:
                     tools = await server.list_tools()
                     if any(tool.name == tool_call["tool"] for tool in tools):
@@ -88,23 +88,23 @@ class ChatSession:
                             result = await server.execute_tool(
                                 tool_call["tool"], tool_call["arguments"]
                             )
-
-                            if isinstance(result, dict) and "progress" in result:
-                                progress = result["progress"]
-                                total = result["total"]
-                                percentage = (progress / total) * 100
-                                logging.debug(
-                                    f"Progress: {progress}/{total} ({percentage:.1f}%)"
-                                )
-                            results[tool_call['tool']] = result.content[0].text
-                            return results
+                            print(f"Executed {tool_call['tool']} on {server}")
                         except Exception as e:
-                            error_msg = f"Error executing tool: {str(e)}"
-                            logging.error(error_msg)
-                            return error_msg
+                            print(f"Failed to execute {tool_call['tool']} on {server}: {e}")
 
-                return f"No server found with tool: {tool_call['tool']}"
-            return llm_response
+                        if isinstance(result, dict) and "progress" in result:
+                            progress = result["progress"]
+                            total = result["total"]
+                            percentage = (progress / total) * 100
+                            logging.debug(
+                                f"Progress: {progress}/{total} ({percentage:.1f}%)"
+                            )
+                            
+                        results[tool_call['tool']] = result.content[0].text
+            if not results:
+                return llm_response
+            else:
+                return results
         except json.JSONDecodeError:
             return llm_response
 
@@ -132,7 +132,8 @@ class ChatSession:
 
             tools_description = "{"+"\n".join([tool.format_for_llm() for tool in all_tools])+"}"
             system_message = SYSTEM_MESSAGE.format(tools_description)
-            self.inputs['backstory'] = system_message
+            # self.inputs['backstory'] = system_message
+            self.messages = [{"role": "system", "content": system_message}]
             return True
         except Exception as e:
             logging.error(f"Initialization error: {e}")
@@ -151,27 +152,20 @@ class ChatSession:
         try:
             # self.messages.append({"role": "user", "content": user_prompt})
             # message = "".join(f"'role': '{item['role']}', 'content': '{item['content']}'" for item in self.messages)
-            self.inputs['task'] = user_prompt
-            llm_response = run_dspy_or_crewai_agent(self.inputs)
-            logging.info(
-                f"\n{colorama.Fore.BLUE}Assistant: {llm_response}"
-                f"{colorama.Style.RESET_ALL}"
-            )
+            # self.inputs['task'] = user_prompt
+            self.messages.append({"role": "user", "content": user_prompt})
+            # llm_response = run_dspy_or_crewai_agent(self.inputs)
+            llm_response = self.llm_client.get_response(self.messages)
+            index = llm_response.find("[")
+            rindex = llm_response.find("]")
+            llm_response = llm_response[index:rindex + 1]
             print(llm_response)
-            input_json = llm_response[llm_response.find('{'):llm_response.rfind("}") + 1]
-            tool_result = await self.process_llm_response(input_json)
-            # self.inputs['task'] = f"""
-            #         这是提问的内容
-            #         {user_prompt}
-            #         以下是工具提供的信息
-            #         {result}
-            #         请进行总结
-            # """
-            # final_response = run_dspy_or_crewai_agent(self.inputs)
-            # logging.info(
-            #     f"\n{colorama.Fore.GREEN}Final response: {final_response}"+f"{colorama.Style.RESET_ALL}")
-            # return final_response
-            return tool_result
+            # print(llm_response)
+            
+            result = await self.process_llm_response(llm_response)
+            
+
+            return result
         except Exception as e:
             error_msg = f"Error processing prompt: {str(e)}"
             print(e.__traceback__.tb_lineno)

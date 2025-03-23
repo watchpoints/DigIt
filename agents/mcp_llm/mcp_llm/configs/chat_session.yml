@@ -10,13 +10,13 @@ WEB:
   SEARCH_ENGINE_TIMEOUT: 5
 
 MODEL:
-  # MODEL_API_KEY: sk-rwdwblfaqhbalqgobftnpjaixpzrltpiqjjjpkunswdfdsat
-  # MODEL_NAME: deepseek-ai/DeepSeek-V2.5
-  # MODEL_MAX_TOKENS: 2048
-  # MODEL_API_URL: https://api.siliconflow.cn/v1/chat/completions
- MODEL_API_KEY: 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
- MODEL_NAME: gpt-4o
- MODEL_MAX_TOKENS: 2048
+  MODEL_API_KEY: sk-rwdwblfaqhbalqgobftnpjaixpzrltpiqjjjpkunswdfdsat
+  MODEL_NAME: deepseek-ai/DeepSeek-V3
+  MODEL_MAX_TOKENS: 30000
+  MODEL_API_URL: https://api.siliconflow.cn/v1
+#  MODEL_API_KEY: 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
+#  MODEL_NAME: gpt-4o-mini
+#  MODEL_MAX_TOKENS: 2048
 
 ENV:
   PROXY_URL: null
