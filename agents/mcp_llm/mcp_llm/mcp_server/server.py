@@ -137,4 +137,5 @@ class Server:
                 self.session = None
                 self.stdio_context = None
             except Exception as e:
-                logging.error(f"Error during cleanup of server {self.name}: {e}")
+                self.session = None
+                self.stdio_context = None

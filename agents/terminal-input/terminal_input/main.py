@@ -24,8 +24,9 @@ def send_task_and_receive_data(node):
         event = node.next(timeout=200)
         if event is not None:
             while True:
+                click.echo("hello")
                 if event is not None:
-                    node_results = json.loads(event['value'][0].to_py())
+                    node_results = json.loads(event['value'][0].as_py())
                     results = node_results.get('node_results')
                     is_dataflow_end = node_results.get('dataflow_status', False)
                     step_name = node_results.get('step_name', '')

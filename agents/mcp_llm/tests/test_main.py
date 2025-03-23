@@ -23,20 +23,16 @@ chat_session = ChatSession(servers=servers, inputs=inputs)
 
 
 async def process():
-    global chat_session
-    asyncio_atexit.register(chat_session.cleanup_servers)
     try:
         await chat_session.initialize()
-        await chat_session.run("告诉我关于苹果的新闻")
+        result = await chat_session.run("告诉我关于苹果的新闻")
     except Exception as e:
-        # 捕获 GeneratorExit 进行清理
-       logging.error("fuck")
-       logging.error(e.__traceback__.tb_lineno)
-    finally:
-        await asyncio.sleep(1)
+        await chat_session.cleanup_servers()
+        
+    return result
 
-asyncio.run(process())
+text = asyncio.run(process())
 
-print("done")
+print(text)
 
 

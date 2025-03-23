@@ -5,6 +5,7 @@ import colorama
 
 from mcp_llm.mcp_server.server import Server
 from mofa.run.run_agent import run_dspy_or_crewai_agent
+import asyncio
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -53,11 +54,14 @@ class ChatSession:
 
     async def cleanup_servers(self) -> None:
         """Clean up all servers properly."""
+        cleanup_tasks = []
         for server in self.servers:
+            cleanup_tasks.append(asyncio.create_task(server.cleanup()))
+        if cleanup_tasks:
             try:
-                await server.cleanup()
-            except Exception as e:
-                logging.warning(f"Warning during cleanup of server {server.name}: {e}")
+                await asyncio.gather(*cleanup_tasks, return_exceptions=False)
+            except Exception:
+                pass
 
     async def process_llm_response(self, llm_response: str) -> str:
         """Process the LLM response and execute tools if needed.
@@ -133,7 +137,7 @@ class ChatSession:
         except Exception as e:
             logging.error(f"Initialization error: {e}")
             logging.error(e.__traceback__.tb_lineno)
-            await self.cleanup_servers()
+            # await self.cleanup_servers()
             return False
     async def run(self, user_prompt: str) -> str:
         """Run a single prompt through the chat session.
@@ -156,7 +160,6 @@ class ChatSession:
             print(llm_response)
             input_json = llm_response[llm_response.find('{'):llm_response.rfind("}") + 1]
             tool_result = await self.process_llm_response(input_json)
-            print(tool_result)
             # self.inputs['task'] = f"""
             #         这是提问的内容
             #         {user_prompt}
