@@ -41,9 +41,14 @@ async def run_agent():
             if event["id"] in agent_inputs:
                 task = event['value'][0].as_py()
                 result = await process(task)
-                node.send_output("node_results", pa.array([json.dumps(result)]), event['metadata'])
+                node.send_output("mcp_llm_output", pa.array([json.dumps(result)]), event['metadata'])
         elif event['type'] == 'STOP':
-            asyncio.gather(chat_session.cleanup_servers())
+            try:
+                await chat_session.cleanup_servers()
+            except Exception as e:
+                await chat_session.cleanup_servers()
+                
+
 
 
     

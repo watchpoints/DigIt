@@ -2,36 +2,44 @@ import logging
 
 import colorama
 
-import yaml
-import json
+
 from mcp_llm.mcp_server.server import Server
 from mofa.run.run_agent import run_dspy_or_crewai_agent
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-SYSTEM_MESSAGE = """
-    'You are a helpful assistant with access to these tools:\n\n'
-    '{tools_description}\n\n'
-    'Choose the appropriate tool based on the user's question. '
-    'If no tool is needed, reply directly.\n\n'
-    'IMPORTANT: When you need to use a tool, you must ONLY respond with '
-    'the exact JSON object format below, nothing else:\n'
-    '{{\n'
-    '    "tool": "tool-name",\n'
-    '    "arguments": {{\n'
-    '        "argument-name": "value"\n'
-    '   }}\n'
-    '}}\n\n'
-    'After receiving a tool's response:\n'
-    '1. Transform the raw data into a natural, conversational response\n'
-    '2. Keep responses concise but informative\n'
-    '3. Focus on the most relevant information\n'
-    '4. Use appropriate context from the user's question\n'
-    '5. Avoid simply repeating the raw data\n\n'
-    'Please use only the tools that are explicitly defined above'
+SYSTEM_MESSAGE = (
+    """
+You are an efficient and reliable assistant with access to the following tools:
+{}
+
+Based on the user's query, select the appropriate tool. If no tool is needed, reply directly.
+
+IMPORTANT: When you need to use a tool, reply ONLY with a JSON object in the exact format below (without any extra text):
+!!你还可以生成多个可用工具的json，就像下面这样
+{{
+    "tool": "tool-name",
+    "arguments": {{
+        "argument-name": value
+    }},
+    "tool": "tool-name",
+    "arguments": {{
+        "argument-name": value
+    }},
+    ...
+}},
+
+
+After receiving a tool's response, process the information by:
+1. Delivering a concise and clear summary.
+2. Integrating only the most relevant details into a natural response.
+3. Avoiding repetition of raw data.
+
+Use only the tools defined above.
 """
+)
 
 
 class ChatSession:
@@ -80,7 +88,7 @@ class ChatSession:
                                 progress = result["progress"]
                                 total = result["total"]
                                 percentage = (progress / total) * 100
-                                logging.info(
+                                logging.debug(
                                     f"Progress: {progress}/{total} ({percentage:.1f}%)"
                                 )
 
@@ -104,10 +112,12 @@ class ChatSession:
         try:
             for server in self.servers:
                 try:
+                    print('begin to initialize:', server.name)
                     await server.initialize()
                 except Exception as e:
                     logging.error(f"Failed to initialize server: {e}")
-                    await self.cleanup_servers()
+                    logging.error(e.__traceback__.tb_lineno)
+                    # await self.cleanup_servers()
                     return False
 
             all_tools = []
@@ -115,12 +125,13 @@ class ChatSession:
                 tools = await server.list_tools()
                 all_tools.extend(tools)
 
-            tools_description = "\n".join([tool.format_for_llm() for tool in all_tools])
-            system_message = SYSTEM_MESSAGE.format(tools_description=tools_description)
+            tools_description = "{"+"\n".join([tool.format_for_llm() for tool in all_tools])+"}"
+            system_message = SYSTEM_MESSAGE.format(tools_description)
             self.inputs['backstory'] = system_message
             return True
         except Exception as e:
             logging.error(f"Initialization error: {e}")
+            logging.error(e.__traceback__.tb_lineno)
             await self.cleanup_servers()
             return False
     async def run(self, user_prompt: str) -> str:
@@ -133,17 +144,18 @@ class ChatSession:
             str: The final response from the assistant.
         """
         try:
-            self.messages.append({"role": "user", "content": user_prompt})
-            message = "".join(f"'role': '{item['role']}', 'content': '{item['content']}'" for item in self.messages)
-            self.inputs['task'] = message
+            # self.messages.append({"role": "user", "content": user_prompt})
+            # message = "".join(f"'role': '{item['role']}', 'content': '{item['content']}'" for item in self.messages)
+            self.inputs['task'] = user_prompt
             llm_response = run_dspy_or_crewai_agent(self.inputs)
             logging.info(
                 f"\n{colorama.Fore.BLUE}Assistant: {llm_response}"
                 f"{colorama.Style.RESET_ALL}"
             )
-
-            result = await self.process_llm_response(llm_response)
-
+            print(llm_response)
+            input_json = llm_response[llm_response.find('{'):llm_response.rfind("}") + 1]
+            tool_result = await self.process_llm_response(input_json)
+            print(tool_result)
             # self.inputs['task'] = f"""
             #         这是提问的内容
             #         {user_prompt}
@@ -155,7 +167,7 @@ class ChatSession:
             # logging.info(
             #     f"\n{colorama.Fore.GREEN}Final response: {final_response}"+f"{colorama.Style.RESET_ALL}")
             # return final_response
-            return result
+            return tool_result
         except Exception as e:
             error_msg = f"Error processing prompt: {str(e)}"
             print(e.__traceback__.tb_lineno)
@@ -180,7 +192,8 @@ class ChatSession:
                         f"{colorama.Style.RESET_ALL}"
                     )
 
-                    result = await self.process_llm_response(llm_response)
+
+                    result = await self.process_llm_response(llm_response[llm_response.find('{'):llm_response.rfind("}")])
 
                     if result != llm_response:
                         self.messages.append(

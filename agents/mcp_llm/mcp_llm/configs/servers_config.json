@@ -1,16 +1,11 @@
 {
     "mcpServers": {
-        "weather": {
-            "command": "node",
-            "args": ["/Users/keria/Documents/mcp/weather-mcp/dist/index.js"]
-        },
-        "qualitativeresearch": {
+        "trends-hub": {
             "command": "npx",
             "args": [
                 "-y",
-                "github:tejpalvirk/qualitativeresearch"
+                "mcp-trends-hub@1.6.0"
             ]
         }
-
     }
 }

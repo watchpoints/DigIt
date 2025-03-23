@@ -58,7 +58,7 @@ class Server:
             self.session = session
             logging.info(f"Server {self.name} initialization completed successfully")
         except Exception as e:
-            # logging.error(f"Error initializing server {self.name}: {e}")
+            logging.error(f"Error initializing server {self.name}: {e}")
             logging.error(e.__traceback__.tb_lineno)
             await self.cleanup()
             raise
@@ -82,7 +82,6 @@ class Server:
             if isinstance(item, tuple) and item[0] == "tools":
                 for tool in item[1]:
                     tools.append(Tool(tool.name, tool.description, tool.inputSchema))
-
         return tools
 
     async def execute_tool(
