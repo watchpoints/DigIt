@@ -14,6 +14,6 @@ nodes:
     inputs:
       task: terminal-input/data
     env:
-      IS_DATAFLOW_END: false
+      IS_DATAFLOW_END: true
       WRITE_LOG: true
  

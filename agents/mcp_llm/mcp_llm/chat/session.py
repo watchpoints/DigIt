@@ -18,7 +18,7 @@ You are an efficient and reliable assistant with access to the following tools:
 Based on the user's query, select the appropriate tool. If no tool is needed, reply directly.
 
 IMPORTANT: When you need to use a tool, reply ONLY with a JSON object in the exact format below (without any extra text):
-!!你还可以生成多个可用工具的json，就像下面这样
+!!你还可以生成多个可用工具的json，就像下面这样,尽可能的使用多种工具生成相应回答
 {{
     "tool": "tool-name",
     "arguments": {{
@@ -72,9 +72,10 @@ class ChatSession:
 
         try:
             tool_call = json.loads(llm_response)
+            results = {}
             if "tool" in tool_call and "arguments" in tool_call:
-                logging.info(f"Executing tool: {tool_call['tool']}")
-                logging.info(f"With arguments: {tool_call['arguments']}")
+                logging.debug(f"Executing tool: {tool_call['tool']}")
+                logging.debug(f"With arguments: {tool_call['arguments']}")
 
                 for server in self.servers:
                     tools = await server.list_tools()
@@ -91,8 +92,8 @@ class ChatSession:
                                 logging.debug(
                                     f"Progress: {progress}/{total} ({percentage:.1f}%)"
                                 )
-
-                            return f"Tool execution result: {result}"
+                            results[tool_call['tool']] = result.content[0].text
+                            return results
                         except Exception as e:
                             error_msg = f"Error executing tool: {str(e)}"
                             logging.error(error_msg)

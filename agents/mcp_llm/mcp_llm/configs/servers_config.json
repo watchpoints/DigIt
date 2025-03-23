@@ -6,6 +6,17 @@
                 "-y",
                 "mcp-trends-hub@1.6.0"
             ]
+        },
+        "weather": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@smithery/cli@latest",
+                "run",
+                "@turkyden/weather",
+                "--config",
+                "{}"
+            ]
         }
     }
 }
