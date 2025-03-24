@@ -1,13 +1,12 @@
 {
     "mcpServers": {
-        "exa": {
-            "command": "npx",
+        "playwright-server": {
+            "command": "uv",
             "args": [
-                "/Users/keria/Documents/mcp/exa-mcp-server/build/index.js"
-            ],
-            "env": {
-                "EXA_API_KEY": "39135995-74c5-479f-a0f0-4f227f82fa36"
-            }
+                "--directory", "/Users/keria/Documents/mcp/playwright-plus-python-mcp",
+                "run",
+                "playwright-server"
+            ]
         }
     }
 }

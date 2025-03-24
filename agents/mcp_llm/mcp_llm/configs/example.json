@@ -5,5 +5,22 @@
                 "-y",
                 "mcp-trends-hub@1.6.0"
             ]
+        },
+        "exa": {
+            "command": "npx",
+            "args": [
+                "/Users/keria/Documents/mcp/exa-mcp-server/build/index.js"
+            ],
+            "env": {
+                "EXA_API_KEY": "96ce1b0f-eed3-4150-b298-9c6da7f47566"
+            }
+        },
+        "weibo": {
+            "command": "uvx",
+            "args": [
+                "--from",
+                "git+https://github.com/qinyuanpei/mcp-server-weibo.git",
+                "mcp-server-weibo"
+            ]
         }
 }

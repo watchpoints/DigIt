@@ -18,9 +18,9 @@ You are an efficient and reliable assistant with access to the following tools:
 
 {}
 
-Based on the user's query, select the appropriate tool.Without tool to use.return a ["no tool to use"]
+Based on the user's query, select the appropriate tool.
 
-IMPORTANT: When you need to use a tool, reply ONLY with a JSON object in the exact format below (without any extra text):
+IMPORTANT: First you need to break the work into many steps and each steps is correspondent to one tool.When you need to use a tool, reply ONLY with a JSON object in the exact format below (without any extra text):
 IMPORTANT: 工具名字不能重复，尽可能多用工具
 !!你还可以生成多个可用工具的json，就像下面这样,尽可能的使用多种工具生成相应回答
 [
@@ -52,7 +52,6 @@ IMPORTANT: 工具名字不能重复，尽可能多用工具
     "arguments": {{
         "argument-name": "value you prefer"
     }},
-    ...
 ]
 
 
@@ -81,7 +80,10 @@ class ChatSession:
         cleanup_tasks = []
         for server in self.servers:
             # cleanup_tasks.append(asyncio.create_task(server.cleanup()))
-            await server.cleanup()
+            try:
+                await server.cleanup()
+            except:
+                await server.cleanup()
         # if cleanup_tasks:
         #     try:
         #         await asyncio.gather(*cleanup_tasks, return_exceptions=False)
@@ -122,7 +124,10 @@ class ChatSession:
                             print(
                                 f"Progress: {progress}/{total} ({percentage:.1f}%)"
                             )
-                        results[f"{tool_call['tool']}_{count}"] = result
+                        try:
+                            results[f"{tool_call['tool']}_{count}"] = result.content[0].text
+                        except Exception as e:
+                            break
                 count += 1
             if not results:
                 return llm_response

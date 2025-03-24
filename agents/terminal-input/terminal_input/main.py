@@ -24,7 +24,6 @@ def send_task_and_receive_data(node):
         event = node.next(timeout=200)
         if event is not None:
             while True:
-                click.echo("hello")
                 if event is not None:
                     node_results = json.loads(event['value'][0].as_py())
                     results = node_results.get('node_results')
@@ -34,7 +33,7 @@ def send_task_and_receive_data(node):
                     click.echo(f"{results} ", )
                     click.echo(f'---------------------------------------')
                     sys.stdout.flush()
-                    if is_dataflow_end ==True or is_dataflow_end == 'true' or is_dataflow_end == 'True':
+                    if is_dataflow_end == True or is_dataflow_end == 'true' or is_dataflow_end == 'True':
                         break
                     event = node.next(timeout=200)
 def main():

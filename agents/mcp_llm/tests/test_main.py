@@ -27,15 +27,16 @@ async def process():
     try:
         await chat_session.initialize()
         # asyncio_atexit.register(chat_session.cleanup_servers)
-        result = await chat_session.run("搜索一下关于sam altman的内容")
+        result = await chat_session.run("查看一下赵露丝的相关信息")
+        
     except Exception as e:
         print(e)
     finally:
         await chat_session.cleanup_servers()
-        
     return result
 
 text = asyncio.run(process())
+# asyncio.run(chat_session.cleanup_servers())
 
 print(text)
 

@@ -138,3 +138,4 @@ class Server:
                 self.stdio_context = None
             except Exception as e:
                 print(e)
+                await self.exit_stack.aclose()
