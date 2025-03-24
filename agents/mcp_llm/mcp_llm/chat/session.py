@@ -18,7 +18,7 @@ You are an efficient and reliable assistant with access to the following tools:
 
 {}
 
-Based on the user's query, select the appropriate tool. If no tool is needed, reply directly.
+Based on the user's query, select the appropriate tool.Without tool to use.return a ["no tool to use"]
 
 IMPORTANT: When you need to use a tool, reply ONLY with a JSON object in the exact format below (without any extra text):
 IMPORTANT: 工具名字不能重复，尽可能多用工具
@@ -29,6 +29,26 @@ IMPORTANT: 工具名字不能重复，尽可能多用工具
         "argument-name": "value you prefer"
     }},
     "tool": "tool-2-name",
+    "arguments": {{
+        "argument-name": "value you prefer"
+    }},
+    "tool": "tool-3-name",
+    "arguments": {{
+        "argument-name": "value you prefer"
+    }},
+    "tool": "tool-4-name",
+    "arguments": {{
+        "argument-name": "value you prefer"
+    }},
+    "tool": "tool-5-name",
+    "arguments": {{
+        "argument-name": "value you prefer"
+    }},
+    "tool": "tool-6-name",
+    "arguments": {{
+        "argument-name": "value you prefer"
+    }},
+    "tool": "tool-7-name",
     "arguments": {{
         "argument-name": "value you prefer"
     }},
@@ -57,14 +77,16 @@ class ChatSession:
 
     async def cleanup_servers(self) -> None:
         """Clean up all servers properly."""
+        print("begin to cleanup servers")
         cleanup_tasks = []
         for server in self.servers:
-            cleanup_tasks.append(asyncio.create_task(server.cleanup()))
-        if cleanup_tasks:
-            try:
-                await asyncio.gather(*cleanup_tasks, return_exceptions=False)
-            except Exception:
-                pass
+            # cleanup_tasks.append(asyncio.create_task(server.cleanup()))
+            await server.cleanup()
+        # if cleanup_tasks:
+        #     try:
+        #         await asyncio.gather(*cleanup_tasks, return_exceptions=False)
+        #     except Exception:
+        #         pass
 
     async def process_llm_response(self, llm_response: str) -> str:
         """Process the LLM response and execute tools if needed.
@@ -80,6 +102,7 @@ class ChatSession:
         try:
             tool_calls = json.loads(llm_response)
             results = {}
+            count = 0
             for tool_call in tool_calls:  # tool_calls 是一个 JSON 数组
                 for server in self.servers:
                     tools = await server.list_tools()
@@ -96,11 +119,11 @@ class ChatSession:
                             progress = result["progress"]
                             total = result["total"]
                             percentage = (progress / total) * 100
-                            logging.debug(
+                            print(
                                 f"Progress: {progress}/{total} ({percentage:.1f}%)"
                             )
-                            
-                        results[tool_call['tool']] = result.content[0].text
+                        results[f"{tool_call['tool']}_{count}"] = result
+                count += 1
             if not results:
                 return llm_response
             else:
@@ -164,7 +187,7 @@ class ChatSession:
             
             result = await self.process_llm_response(llm_response)
             
-
+ 
             return result
         except Exception as e:
             error_msg = f"Error processing prompt: {str(e)}"

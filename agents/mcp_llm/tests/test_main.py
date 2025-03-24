@@ -26,10 +26,12 @@ chat_session = ChatSession(servers, openai)
 async def process():
     try:
         await chat_session.initialize()
-        asyncio_atexit.register(chat_session.cleanup_servers)
-        result = await chat_session.run("告诉我今天的关于apple的消息")
+        # asyncio_atexit.register(chat_session.cleanup_servers)
+        result = await chat_session.run("搜索一下关于sam altman的内容")
     except Exception as e:
-        pass
+        print(e)
+    finally:
+        await chat_session.cleanup_servers()
         
     return result
 

@@ -1,11 +1,13 @@
 {
     "mcpServers": {
-        "trends-hub": {
+        "exa": {
             "command": "npx",
             "args": [
-                "-y",
-                "mcp-trends-hub@1.6.0"
-            ]
+                "/Users/keria/Documents/mcp/exa-mcp-server/build/index.js"
+            ],
+            "env": {
+                "EXA_API_KEY": "39135995-74c5-479f-a0f0-4f227f82fa36"
+            }
         }
     }
 }

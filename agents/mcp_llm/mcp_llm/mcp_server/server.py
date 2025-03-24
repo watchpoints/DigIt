@@ -137,5 +137,4 @@ class Server:
                 self.session = None
                 self.stdio_context = None
             except Exception as e:
-                self.session = None
-                self.stdio_context = None
+                print(e)

@@ -30,7 +30,7 @@ async def run_agent(task):
         await chat_session.initialize()
         result = await chat_session.run(task)
     except Exception as e:
-        asyncio_atexit.register(chat_session.cleanup_servers)
+        await chat_session.cleanup_servers()
     return result
                 
                 
